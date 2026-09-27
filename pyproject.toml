@@ -1,0 +1,46 @@
+[project]
+name = "goblin-wg"
+version = "1.0.0"
+description = "Wargaming API client and CLI toolkit for Python. Dynamically generates typed methods from the live API spec with auto-generated IDE stubs."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Christian Vaccaro-Gallo", email = "17118143+C-Vac@users.noreply.github.com" }
+]
+keywords = ["wargaming", "world-of-warships", "wows", "api", "client"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Games/Entertainment",
+    "Typing :: Typed",
+]
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.5",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/goblinlife/goblin-wg"
+"Bug Tracker" = "https://github.com/goblinlife/goblin-wg/issues"
+
+[project.scripts]
+wg = "wg.main:main"
+wg-stubgen = "wg.wows._stubgen:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wg"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"
+
+[tool.hatch.build.targets.sdist.hooks.custom]
+path = "hatch_build.py"

@@ -1,6 +1,6 @@
 [project]
 name = "goblin-wg"
-version = "1.0.0"
+version = "1.0.1"
 description = "Wargaming API client and CLI toolkit for Python. Dynamically generates typed methods from the live API spec with auto-generated IDE stubs."
 readme = "README.md"
 license = { text = "MIT" }

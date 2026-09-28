@@ -178,9 +178,7 @@ def _format_method_signature(method_info: dict[str, Any]) -> list[str]:
     args = _build_method_args(method_info, literal_output_fields)
     desc = method_info.get("description", "").replace("\n", "\n        ")
 
-    lines = [
-        f"    async def {method_key}({', '.join(args)}) -> Union[AttrDict, List[AttrDict], Any]:"
-    ]
+    lines = [f"    async def {method_key}({', '.join(args)}) -> Any:"]
     if desc:
         lines.append(f'        """\n        {desc}\n        """')
     lines.append("        ...")

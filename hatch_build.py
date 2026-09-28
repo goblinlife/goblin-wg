@@ -5,12 +5,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+
     class BuildHookInterface:
         root: str
 else:
     try:
         from hatchling.builders.hooks.plugin.interface import BuildHookInterface
     except ImportError:
+
         class BuildHookInterface:
             root: str
 

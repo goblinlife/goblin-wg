@@ -30,10 +30,39 @@ class AttrDict(dict):
             for key, value in kwargs.items():
                 self[key] = _wrap_dict_or_list(value)
 
+    def __getitem__(self, item):
+        try:
+            return super().__getitem__(item)
+        except KeyError:
+            if isinstance(item, int) and str(item) in self:
+                return super().__getitem__(str(item))
+            if isinstance(item, str) and item.isdigit() and int(item) in self:
+                return super().__getitem__(int(item))
+            raise
+
+    def get(self, item, default=None):
+        try:
+            return self[item]
+        except KeyError:
+            return default
+
+    def __contains__(self, item):
+        if super().__contains__(item):
+            return True
+        if isinstance(item, int) and str(item) in self:
+            return True
+        if isinstance(item, str) and item.isdigit() and int(item) in self:
+            return True
+        return False
+
     def __getattr__(self, item):
         try:
             return self[item]
         except KeyError:
+            # Fallback for nested statistics attributes (e.g. p_stats.pvp -> p_stats.statistics.pvp)
+            stats = super().get("statistics")
+            if isinstance(stats, dict) and item in stats:
+                return stats[item]
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{item}'"
             ) from None

@@ -77,6 +77,40 @@ for p in players:
 
 ---
 
+## GDPR / Data Deletion Utility
+
+Wargaming frequently requires developers to delete data for users who have requested account deletion, providing a `deleted_accounts.zip` file. `goblin-wg` includes built-in tools to make processing this trivial.
+
+### Python API
+
+```python
+from wg.compliance import extract_deleted_account_ids
+
+# Pass the path to the zip file (or raw accounts.csv) or its bytes
+account_ids = extract_deleted_account_ids("deleted_accounts.zip")
+
+for account_id in account_ids:
+    # Example: Delete from your database
+    db.execute("DELETE FROM players WHERE account_id = ?", (account_id,))
+```
+
+### CLI 
+
+You can also use the CLI to easily pass these IDs into external scripts or pipelines:
+
+```bash
+# Outputs a JSON array of IDs
+wg compliance extract-deleted deleted_accounts.zip
+
+# Outputs a raw list of IDs, one per line
+wg compliance extract-deleted deleted_accounts.zip --format text
+
+# Pipe to another tool
+wg compliance extract-deleted deleted_accounts.zip --format json | jq '.[]'
+```
+
+---
+
 ## CLI
 
 The `wg` CLI is registered as a project script when installed:

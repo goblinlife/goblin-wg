@@ -12,16 +12,16 @@ class WargamingAPIClient(BaseWargamingAPIClient):
         logger: logging.Logger | None = None,
     ):
         base_urls = {
-            "na": "https://api.worldofwarships.com",
-            "eu": "https://api.worldofwarships.eu",
-            "asia": "https://api.worldofwarships.asia",
-            "ru": "https://api.worldofwarships.ru",
+            "na": "https://api.worldoftanks.com",
+            "eu": "https://api.worldoftanks.eu",
+            "asia": "https://api.worldoftanks.asia",
+            "ru": "https://api.worldoftanks.ru",
         }
         stub_path = Path(__file__).parent / "client.pyi"
         super().__init__(
             application_id=application_id,
-            game_title="wows",
-            api_domain="api.worldofwarships.com",
+            game_title="wot",
+            api_domain="api.worldoftanks.com",
             base_urls=base_urls,
             storage_path=storage_path,
             logger=logger,

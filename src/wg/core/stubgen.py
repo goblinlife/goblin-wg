@@ -1,4 +1,4 @@
-"""Private module for generating type stubs for World of Warships API client."""
+"""Private module for generating type stubs for Wargaming API clients."""
 
 import json
 import logging
@@ -14,8 +14,6 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-WG_WOWS_SPEC_URL = "https://api.worldofwarships.com/wows/"
-WG_WOWS_INFO_URL = "https://api.worldofwarships.com/wows/encyclopedia/info/"
 DEFAULT_GAME_VERSION = "15.8.0"
 
 
@@ -40,8 +38,10 @@ def _resolve_application_id(application_id: str | None = None) -> str | None:
 def fetch_game_version(
     application_id: str | None = None,
     log: logging.Logger | None = None,
+    api_domain: str = "api.worldofwarships.com",
+    game_title: str = "wows",
 ) -> str:
-    """Fetch WoWS game client version from encyclopedia/info API endpoint."""
+    """Fetch game client version from encyclopedia/info API endpoint."""
     current_logger = log or logger
     app_id = _resolve_application_id(application_id)
     if not app_id:
@@ -51,7 +51,7 @@ def fetch_game_version(
         )
         return DEFAULT_GAME_VERSION
 
-    url = f"{WG_WOWS_INFO_URL}?application_id={app_id}&fields=game_version"
+    url = f"https://{api_domain}/{game_title}/encyclopedia/info/?application_id={app_id}&fields=game_version"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "goblin-wg-client"})
         with urllib.request.urlopen(req, timeout=10) as response:
@@ -60,7 +60,7 @@ def fetch_game_version(
                 if payload.get("status") == "ok":
                     game_ver = payload.get("data", {}).get("game_version")
                     if game_ver and isinstance(game_ver, str):
-                        current_logger.debug("Fetched WoWS game version from API: %s", game_ver)
+                        current_logger.debug("Fetched game version from API: %s", game_ver)
                         return game_ver
                 else:
                     err_info = payload.get("error", {})
@@ -74,28 +74,29 @@ def fetch_game_version(
     return DEFAULT_GAME_VERSION
 
 
-def get_default_storage_path() -> Path:
-    """Return standard user cache directory for WoWS API data."""
+def get_default_storage_path(game_title: str = "wows") -> Path:
+    """Return standard user cache directory for WG API data."""
     xdg = os.environ.get("XDG_CACHE_HOME")
     if xdg:
-        return Path(xdg) / "wg" / "wows"
+        return Path(xdg) / "wg" / game_title
     if sys.platform == "win32":
         appdata = os.environ.get("LOCALAPPDATA")
         base = Path(appdata) if appdata else Path.home() / "AppData" / "Local"
-        return base / "wg" / "wows"
+        return base / "wg" / game_title
     if sys.platform == "darwin":
-        return Path.home() / "Library" / "Caches" / "wg" / "wows"
-    return Path.home() / ".cache" / "wg" / "wows"
+        return Path.home() / "Library" / "Caches" / "wg" / game_title
+    return Path.home() / ".cache" / "wg" / game_title
 
 
-def get_bundled_spec_path() -> Path:
+def get_bundled_spec_path(game_title: str) -> Path:
     """Return path to fallback bundled spec file."""
-    return Path(__file__).parent / "data" / "wows_api_spec.json"
+    # We will assume data is adjacent to the caller, or we can look in wg/<game_title>/data
+    return Path(__file__).parent.parent / game_title / "data" / f"{game_title}_api_spec.json"
 
 
-def get_default_stub_path() -> Path:
+def get_default_stub_path(game_title: str) -> Path:
     """Return path to client.pyi."""
-    return Path(__file__).parent / "client.pyi"
+    return Path(__file__).parent.parent / game_title / "client.pyi"
 
 
 def _extract_enum_literal(help_text: str) -> str | None:
@@ -141,7 +142,7 @@ def _build_method_args(method_info: dict[str, Any], literal_output_fields: str) 
     args = ["self", "region: str"]
     req_fields: list[str] = []
     opt_fields: list[str] = []
-    input_form = method_info.get("input_form_info", {})
+    input_form = method_info.get("input_form_info") or {}
     fields = input_form.get("fields", [])
 
     for field in fields:
@@ -166,9 +167,10 @@ def _format_method_signature(method_info: dict[str, Any]) -> list[str]:
     if not method_key:
         return []
 
+    output_form = method_info.get("output_form_info") or {}
     output_fields = [
         f.get("name")
-        for f in method_info.get("output_form_info", {}).get("fields", [])
+        for f in output_form.get("fields", [])
         if f.get("name")
     ]
     literal_output_fields = (
@@ -241,6 +243,8 @@ def generate_stub_content(
 def fetch_remote_spec(
     spec_path: Path | None = None,
     log: logging.Logger | None = None,
+    api_domain: str = "api.worldofwarships.com",
+    game_title: str = "wows",
 ) -> dict[str, Any] | None:
     """Fetch spec from Wargaming API with HTTP 304 handling."""
     current_logger = log or logger
@@ -252,7 +256,7 @@ def fetch_remote_spec(
         )
 
     try:
-        req = urllib.request.Request(WG_WOWS_SPEC_URL, headers=headers)
+        req = urllib.request.Request(f"https://{api_domain}/{game_title}/", headers=headers)
         with urllib.request.urlopen(req, timeout=10) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode("utf-8"))
@@ -266,29 +270,31 @@ def fetch_remote_spec(
                     try:
                         spec_path.parent.mkdir(parents=True, exist_ok=True)
                         spec_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-                        current_logger.info("Updated WoWS API spec downloaded and saved.")
+                        current_logger.info(f"Updated {game_title} API spec downloaded and saved.")
                     except OSError as err:
                         current_logger.warning("Could not write spec to %s: %s", spec_path, err)
                 return data
     except urllib.error.HTTPError as err:
         if err.code == 304:
-            current_logger.debug("WoWS API spec is up to date (304 Not Modified).")
+            current_logger.debug(f"{game_title} API spec is up to date (304 Not Modified).")
         else:
-            current_logger.error("HTTP Error fetching WoWS API spec: %s", err.code)
+            current_logger.error(f"HTTP Error fetching {game_title} API spec: %s", err.code)
     except Exception as err:
-        current_logger.error("Error fetching WoWS API spec: %s", err)
+        current_logger.error(f"Error fetching {game_title} API spec: %s", err)
     return None
 
 
 def load_or_fetch_spec(
     storage_path: Path | None = None,
     log: logging.Logger | None = None,
+    api_domain: str = "api.worldofwarships.com",
+    game_title: str = "wows",
 ) -> dict[str, Any]:
     """Load cached spec, fetch remote updates, or fallback to bundled spec."""
-    target_storage = storage_path or get_default_storage_path()
-    spec_path = target_storage / "wows_api_spec.json"
+    target_storage = storage_path or get_default_storage_path(game_title)
+    spec_path = target_storage / f"{game_title}_api_spec.json"
 
-    remote_spec = fetch_remote_spec(spec_path=spec_path, log=log)
+    remote_spec = fetch_remote_spec(spec_path=spec_path, log=log, api_domain=api_domain, game_title=game_title)
     if remote_spec:
         return remote_spec
 
@@ -298,7 +304,7 @@ def load_or_fetch_spec(
         except Exception as err:
             (log or logger).warning("Failed to parse cached spec at %s: %s", spec_path, err)
 
-    bundled_path = get_bundled_spec_path()
+    bundled_path = get_bundled_spec_path(game_title)
     if bundled_path.exists():
         try:
             return json.loads(bundled_path.read_text(encoding="utf-8"))
@@ -306,7 +312,7 @@ def load_or_fetch_spec(
             (log or logger).warning("Failed to parse bundled spec at %s: %s", bundled_path, err)
 
     raise RuntimeError(
-        "Could not load Wargaming WoWS API spec from network, cache, or bundled fallback."
+        f"Could not load {game_title} API spec from network, cache, or bundled fallback."
     )
 
 
@@ -316,15 +322,21 @@ def generate_type_stubs(
     storage_path: Path | None = None,
     application_id: str | None = None,
     log: logging.Logger | None = None,
+    api_domain: str = "api.worldofwarships.com",
+    game_title: str = "wows",
 ) -> Path:
     """Generate client.pyi type stubs file."""
     current_logger = log or logger
-    target_stub_path = stub_path or get_default_stub_path()
+    target_stub_path = stub_path or get_default_stub_path(game_title)
 
     if spec_data is None:
-        spec_data = load_or_fetch_spec(storage_path=storage_path, log=current_logger)
+        spec_data = load_or_fetch_spec(
+            storage_path=storage_path, log=current_logger, api_domain=api_domain, game_title=game_title
+        )
 
-    game_version = fetch_game_version(application_id=application_id, log=current_logger)
+    game_version = fetch_game_version(
+        application_id=application_id, log=current_logger, api_domain=api_domain, game_title=game_title
+    )
     content = generate_stub_content(spec_data, game_version=game_version)
     try:
         target_stub_path.parent.mkdir(parents=True, exist_ok=True)
@@ -344,9 +356,11 @@ def ensure_type_stubs(
     storage_path: Path | None = None,
     application_id: str | None = None,
     log: logging.Logger | None = None,
+    api_domain: str = "api.worldofwarships.com",
+    game_title: str = "wows",
 ) -> Path:
     """Ensure client.pyi exists; generate it if missing."""
-    target_stub_path = stub_path or get_default_stub_path()
+    target_stub_path = stub_path or get_default_stub_path(game_title)
     if not target_stub_path.exists():
         return generate_type_stubs(
             spec_data=spec_data,
@@ -354,61 +368,7 @@ def ensure_type_stubs(
             storage_path=storage_path,
             application_id=application_id,
             log=log,
+            api_domain=api_domain,
+            game_title=game_title,
         )
     return target_stub_path
-
-
-def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for standalone stub generation."""
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        prog="wg-stubgen",
-        description="Generate client.pyi type stubs for WoWS API client.",
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        type=Path,
-        default=None,
-        help="Custom destination path for client.pyi",
-    )
-    parser.add_argument(
-        "--storage-path",
-        "-s",
-        type=Path,
-        default=None,
-        help="Custom storage directory where wows_api_spec.json is kept",
-    )
-    parser.add_argument(
-        "--application-id",
-        "-a",
-        type=str,
-        default=None,
-        help="Wargaming application_id for fetching game metadata",
-    )
-    parser.add_argument(
-        "--force",
-        "-f",
-        action="store_true",
-        help="Force regeneration even if stub file exists",
-    )
-    args = parser.parse_args(argv)
-
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    out = args.output or get_default_stub_path()
-    if args.force or not out.exists():
-        print(f"Generating type stubs to {out}...")
-        generate_type_stubs(
-            stub_path=out,
-            storage_path=args.storage_path,
-            application_id=args.application_id,
-        )
-        print(f"Done. Type stubs generated at: {out}")
-    else:
-        print(f"Type stubs already exist at {out}. Use --force to regenerate.")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

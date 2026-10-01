@@ -28,14 +28,17 @@ class CustomBuildHook(BuildHookInterface):
             sys.path.insert(0, str(src_path))
 
         try:
-            from wg.wows._stubgen import generate_type_stubs
+            from wg.core.stubgen import generate_type_stubs
 
-            target_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
-            generate_type_stubs(stub_path=target_stub)
+            wows_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
+            generate_type_stubs(stub_path=wows_stub, game_title="wows", api_domain="api.worldofwarships.com")
+
+            wot_stub = Path(self.root) / "src" / "wg" / "wot" / "client.pyi"
+            generate_type_stubs(stub_path=wot_stub, game_title="wot", api_domain="api.worldoftanks.com")
         except Exception as exc:
             # Do not fail build if network is unavailable; check if stub already exists
-            target_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
-            if not target_stub.exists():
+            wows_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
+            if not wows_stub.exists():
                 print(
                     f"Warning: Failed to generate type stubs during build: {exc}", file=sys.stderr
                 )

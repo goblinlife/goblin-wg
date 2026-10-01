@@ -22,6 +22,7 @@ TITLES = {
     "wot": {"api_domain": "api.worldoftanks.com", "name": "World of Tanks"},
 }
 
+
 def _cmd_title_generate_stubs(args: argparse.Namespace) -> int:
     """Handle type stub generation for a specific title."""
     title = args.title
@@ -49,10 +50,7 @@ def _cmd_title_fetch_spec(args: argparse.Namespace) -> int:
     spec_path = target_storage / f"{title}_api_spec.json"
     print(f"Fetching {title} API spec to {spec_path}...")
     data = fetch_remote_spec(
-        spec_path=spec_path,
-        log=logger,
-        api_domain=TITLES[title]["api_domain"],
-        game_title=title
+        spec_path=spec_path, log=logger, api_domain=TITLES[title]["api_domain"], game_title=title
     )
     if data:
         meta = data.get("_meta", {})
@@ -218,6 +216,7 @@ def _dispatch_compliance(args: argparse.Namespace) -> int:
             ids = list(extract_deleted_account_ids(args.file))
             if args.format == "json":
                 import json
+
                 print(json.dumps(ids))
             elif args.format == "csv":
                 print("account_id")
@@ -252,7 +251,7 @@ def _dispatch_title(args: argparse.Namespace) -> int:
             storage_path=args.storage_path,
             log=logger,
             api_domain=TITLES[title]["api_domain"],
-            game_title=title
+            game_title=title,
         )
         print(f"{title} type stubs generated at: {stub_path}")
         return 0

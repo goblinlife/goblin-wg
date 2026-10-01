@@ -168,11 +168,7 @@ def _format_method_signature(method_info: dict[str, Any]) -> list[str]:
         return []
 
     output_form = method_info.get("output_form_info") or {}
-    output_fields = [
-        f.get("name")
-        for f in output_form.get("fields", [])
-        if f.get("name")
-    ]
+    output_fields = [f.get("name") for f in output_form.get("fields", []) if f.get("name")]
     literal_output_fields = (
         f"Literal[{', '.join([repr(f) for f in output_fields])}]" if output_fields else ""
     )
@@ -294,7 +290,9 @@ def load_or_fetch_spec(
     target_storage = storage_path or get_default_storage_path(game_title)
     spec_path = target_storage / f"{game_title}_api_spec.json"
 
-    remote_spec = fetch_remote_spec(spec_path=spec_path, log=log, api_domain=api_domain, game_title=game_title)
+    remote_spec = fetch_remote_spec(
+        spec_path=spec_path, log=log, api_domain=api_domain, game_title=game_title
+    )
     if remote_spec:
         return remote_spec
 
@@ -331,11 +329,17 @@ def generate_type_stubs(
 
     if spec_data is None:
         spec_data = load_or_fetch_spec(
-            storage_path=storage_path, log=current_logger, api_domain=api_domain, game_title=game_title
+            storage_path=storage_path,
+            log=current_logger,
+            api_domain=api_domain,
+            game_title=game_title,
         )
 
     game_version = fetch_game_version(
-        application_id=application_id, log=current_logger, api_domain=api_domain, game_title=game_title
+        application_id=application_id,
+        log=current_logger,
+        api_domain=api_domain,
+        game_title=game_title,
     )
     content = generate_stub_content(spec_data, game_version=game_version)
     try:

@@ -23,7 +23,9 @@ def test_cmd_wows_generate_stubs(mock_generate, tmp_path):
 @patch("wg.main.generate_type_stubs")
 def test_cmd_wows_fetch_spec(mock_generate, mock_fetch, tmp_path):
     mock_fetch.return_value = {"_meta": {"api_version": "1.0"}}
-    args = argparse.Namespace(title="wows", storage_path=tmp_path, generate_stubs=True, application_id="test")
+    args = argparse.Namespace(
+        title="wows", storage_path=tmp_path, generate_stubs=True, application_id="test"
+    )
     assert _cmd_title_fetch_spec(args) == 0
     mock_fetch.assert_called_once()
     mock_generate.assert_called_once()
@@ -32,7 +34,9 @@ def test_cmd_wows_fetch_spec(mock_generate, mock_fetch, tmp_path):
 @patch("wg.main.fetch_remote_spec")
 def test_cmd_wows_fetch_spec_no_stubs(mock_fetch, tmp_path):
     mock_fetch.return_value = {"_meta": {"api_version": "1.0"}}
-    args = argparse.Namespace(title="wows", storage_path=tmp_path, generate_stubs=False, application_id="test")
+    args = argparse.Namespace(
+        title="wows", storage_path=tmp_path, generate_stubs=False, application_id="test"
+    )
     assert _cmd_title_fetch_spec(args) == 0
     mock_fetch.assert_called_once()
 
@@ -40,7 +44,9 @@ def test_cmd_wows_fetch_spec_no_stubs(mock_fetch, tmp_path):
 @patch("wg.main.fetch_remote_spec")
 def test_cmd_wows_fetch_spec_fail(mock_fetch, tmp_path):
     mock_fetch.return_value = None
-    args = argparse.Namespace(title="wows", storage_path=tmp_path, generate_stubs=False, application_id="test")
+    args = argparse.Namespace(
+        title="wows", storage_path=tmp_path, generate_stubs=False, application_id="test"
+    )
     assert _cmd_title_fetch_spec(args) == 1
 
 

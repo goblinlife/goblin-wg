@@ -16,26 +16,27 @@ def extract_deleted_account_ids(file_path: Path | str | bytes) -> Iterator[int]:
             raise FileNotFoundError(f"File not found: {file_path}")
 
         if zipfile.is_zipfile(file_path):
-            with zipfile.ZipFile(file_path, 'r') as zf:
-                if 'accounts.csv' not in zf.namelist():
+            with zipfile.ZipFile(file_path, "r") as zf:
+                if "accounts.csv" not in zf.namelist():
                     raise ValueError("accounts.csv not found in the zip file.")
 
-                with zf.open('accounts.csv') as f:
-                    yield from _parse_csv(io.TextIOWrapper(f, encoding='utf-8-sig'))
+                with zf.open("accounts.csv") as f:
+                    yield from _parse_csv(io.TextIOWrapper(f, encoding="utf-8-sig"))
         else:
-            with open(file_path, 'r', encoding='utf-8-sig') as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 yield from _parse_csv(f)
     elif isinstance(file_path, bytes):
         try:
-            with zipfile.ZipFile(io.BytesIO(file_path), 'r') as zf:
-                if 'accounts.csv' not in zf.namelist():
+            with zipfile.ZipFile(io.BytesIO(file_path), "r") as zf:
+                if "accounts.csv" not in zf.namelist():
                     raise ValueError("accounts.csv not found in the zip file.")
-                with zf.open('accounts.csv') as f:
-                    yield from _parse_csv(io.TextIOWrapper(f, encoding='utf-8-sig'))
+                with zf.open("accounts.csv") as f:
+                    yield from _parse_csv(io.TextIOWrapper(f, encoding="utf-8-sig"))
         except zipfile.BadZipFile:
-            yield from _parse_csv(io.StringIO(file_path.decode('utf-8-sig')))
+            yield from _parse_csv(io.StringIO(file_path.decode("utf-8-sig")))
     else:
         raise TypeError("file_path must be a Path, str, or bytes.")
+
 
 def _parse_csv(f) -> Iterator[int]:
     reader = csv.reader(f)
@@ -43,7 +44,7 @@ def _parse_csv(f) -> Iterator[int]:
     if not header:
         return
 
-    if header[0].strip() != 'account_id':
+    if header[0].strip() != "account_id":
         if header[0].strip().isdigit():
             yield int(header[0].strip())
 

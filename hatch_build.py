@@ -31,10 +31,14 @@ class CustomBuildHook(BuildHookInterface):
             from wg.core.stubgen import generate_type_stubs
 
             wows_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
-            generate_type_stubs(stub_path=wows_stub, game_title="wows", api_domain="api.worldofwarships.com")
+            generate_type_stubs(
+                stub_path=wows_stub, game_title="wows", api_domain="api.worldofwarships.com"
+            )
 
             wot_stub = Path(self.root) / "src" / "wg" / "wot" / "client.pyi"
-            generate_type_stubs(stub_path=wot_stub, game_title="wot", api_domain="api.worldoftanks.com")
+            generate_type_stubs(
+                stub_path=wot_stub, game_title="wot", api_domain="api.worldoftanks.com"
+            )
         except Exception as exc:
             # Do not fail build if network is unavailable; check if stub already exists
             wows_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"

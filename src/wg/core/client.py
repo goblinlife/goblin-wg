@@ -85,7 +85,9 @@ class BaseWargamingAPIClient:
         self.game_title = game_title
         self.api_domain = api_domain
         self.base_urls = base_urls
-        self.storage_path = Path(storage_path) if storage_path else get_default_storage_path(self.game_title)
+        self.storage_path = (
+            Path(storage_path) if storage_path else get_default_storage_path(self.game_title)
+        )
         self.logger = logger or logging.getLogger(__name__)
         self.stub_path = Path(stub_path) if stub_path else None
 
@@ -97,7 +99,7 @@ class BaseWargamingAPIClient:
                 storage_path=self.storage_path,
                 log=self.logger,
                 api_domain=self.api_domain,
-                game_title=self.game_title
+                game_title=self.game_title,
             )
 
             for method_info in spec_data.get("methods", []):

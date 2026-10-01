@@ -14,6 +14,14 @@ Exposes multiple interfaces for the WG developer API as seen here: [Official War
   <a href="https://github.com/goblinlife/goblin-wg/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/goblinlife/goblin-wg.svg?style=for-the-badge"></a>
 </p>
 
+> [!NOTE]
+> ### Attn 🐋🐳:
+> This library is completely free and open-source. However, as a goblin, I am legally obligated to request tribute.
+> If this package has helped stabilize your mental state or you just want to feed my insatiable greed, voluntary contributions are appreciated:
+> <br>
+> <a href="https://ko-fi.com/goblinlife"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" height="30"></a>&nbsp;
+> <a href="https://github.com/sponsors/goblinlife"><img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#ea4aaa" alt="GitHub Sponsors" height="30"></a>
+
 ---
 
 ## Features

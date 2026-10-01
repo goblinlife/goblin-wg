@@ -1,6 +1,7 @@
 """Wargaming API client library for Python (goblin-wg)."""
 
-from . import wows
+from . import wot, wows
+from .core.client import BaseWargamingAPIClient
 
-__version__ = "1.0.0"
-__all__ = ["__version__", "wows"]
+__version__ = "1.0.2"
+__all__ = ["__version__", "wows", "wot", "BaseWargamingAPIClient"]

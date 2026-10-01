@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, cast
 
 import aiohttp
 
-from .stubgen import ensure_type_stubs, get_default_storage_path, load_or_fetch_spec
+from ._stubgen import ensure_type_stubs, get_default_storage_path, load_or_fetch_spec
 
 logger = logging.getLogger(__name__)
 
@@ -148,9 +148,7 @@ class BaseWargamingAPIClient:
         url = f"{base_url}{endpoint}"
         params["application_id"] = self.application_id
 
-        import logging
-
-        logger = logging.getLogger("WG_API")
+        logger = self.logger
 
         # Convert lists to comma-separated strings for WG API
         processed_params = {}

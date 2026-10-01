@@ -1,11 +1,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from wg.wows.client import (
-    AttrDict,
-    WargamingAPIClient,
-    _wrap_dict_or_list,  # pyright: ignore[reportAttributeAccessIssue]
-)
+from wg.core.client import AttrDict, _wrap_dict_or_list
+from wg.wot.client import WargamingAPIClient as WotClient
+from wg.wows.client import WargamingAPIClient as WowsClient
 
 
 def test_wrap_dict_or_list():
@@ -43,9 +41,16 @@ def test_attr_dict():
         _ = d.nonexistent
 
 
+@pytest.mark.parametrize(
+    "ClientClass, expected_url",
+    [
+        (WowsClient, "https://api.worldofwarships.com"),
+        (WotClient, "https://api.worldoftanks.com"),
+    ],
+)
 @patch("wg.core.client.load_or_fetch_spec")
 @patch("wg.core.client.ensure_type_stubs")
-def test_wargaming_api_client_init(mock_ensure, mock_load):
+def test_wargaming_api_client_init(mock_ensure, mock_load, ClientClass, expected_url):
     mock_load.return_value = {
         "methods": [
             {
@@ -56,20 +61,24 @@ def test_wargaming_api_client_init(mock_ensure, mock_load):
         ]
     }
 
-    client = WargamingAPIClient("test_app_id")
+    client = ClientClass("test_app_id")
     assert client.application_id == "test_app_id"
     assert hasattr(client, "account_list")
 
-    assert client._get_base_url("na") == "https://api.worldofwarships.com"
+    assert client._get_base_url("na") == expected_url
     with pytest.raises(ValueError, match="Unsupported region: invalid"):
         client._get_base_url("invalid")
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "ClientClass",
+    [WowsClient, WotClient],
+)
 @patch("wg.core.client.load_or_fetch_spec")
 @patch("wg.core.client.ensure_type_stubs")
 @patch("aiohttp.ClientSession.get")
-async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load):
+async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load, ClientClass):
     mock_load.return_value = {
         "methods": [
             {
@@ -79,7 +88,7 @@ async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load):
         ]
     }
 
-    client = WargamingAPIClient("test_app_id")
+    client = ClientClass("test_app_id")
 
     # Mock response
     mock_response = AsyncMock()
@@ -89,8 +98,9 @@ async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load):
     # Setup context manager for session.get
     mock_get.return_value.__aenter__.return_value = mock_response
 
+    endpoint = f"/{client.game_title}/account/list/"
     result = await client._request(
-        "na", "/wows/account/list/", {"search": "player", "fields": ["account_id", "nickname"]}
+        "na", endpoint, {"search": "player", "fields": ["account_id", "nickname"]}
     )
 
     assert isinstance(result, AttrDict)
@@ -99,7 +109,7 @@ async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load):
     # Verify aiohttp was called correctly with params parsed
     mock_get.assert_called_once()
     called_url, called_kwargs = mock_get.call_args
-    assert called_url[0] == "https://api.worldofwarships.com/wows/account/list/"
+    assert called_url[0] == f"{client._get_base_url('na')}{endpoint}"
     assert called_kwargs["params"] == {
         "search": "player",
         "fields": "account_id,nickname",
@@ -108,12 +118,16 @@ async def test_wargaming_api_client_request(mock_get, mock_ensure, mock_load):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "ClientClass",
+    [WowsClient, WotClient],
+)
 @patch("wg.core.client.load_or_fetch_spec")
 @patch("wg.core.client.ensure_type_stubs")
 @patch("aiohttp.ClientSession.get")
-async def test_wargaming_api_client_request_error(mock_get, mock_ensure, mock_load):
+async def test_wargaming_api_client_request_error(mock_get, mock_ensure, mock_load, ClientClass):
     mock_load.return_value = {}
-    client = WargamingAPIClient("test_app_id")
+    client = ClientClass("test_app_id")
 
     mock_response = AsyncMock()
     mock_response.status = 500

@@ -1,7 +1,7 @@
 import os
 from unittest.mock import MagicMock, patch
 
-from wg.core.stubgen import (
+from wg.core._stubgen import (
     DEFAULT_GAME_VERSION,
     _resolve_application_id,
     fetch_game_version,
@@ -20,8 +20,8 @@ def test_resolve_application_id_env():
     assert _resolve_application_id() == "env_app_id"
 
 
-@patch("wg.core.stubgen.Path.exists")
-@patch("wg.core.stubgen.Path.read_text")
+@patch("wg.core._stubgen.Path.exists")
+@patch("wg.core._stubgen.Path.read_text")
 def test_resolve_application_id_secrets(mock_read, mock_exists):
     mock_exists.return_value = True
     mock_read.return_value = "secret_app_id\n"
@@ -90,6 +90,6 @@ def test_fetch_game_version_exception(mock_urlopen):
 
 
 def test_fetch_game_version_no_app_id():
-    with patch("wg.core.stubgen._resolve_application_id", return_value=None):
+    with patch("wg.core._stubgen._resolve_application_id", return_value=None):
         version = fetch_game_version()
         assert version == DEFAULT_GAME_VERSION

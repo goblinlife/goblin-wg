@@ -13,9 +13,9 @@ Exposes multiple interfaces for the WG developer API as seen here: [Official War
 
 ## Features
 
-- **Dynamic API methods** — all 28+ WoWS endpoints are bound automatically from the live `wows/` spec.
+- **Dynamic API methods** — all 28+ WoWS and 62+ WoT endpoints are bound automatically from the live specs.
 - **Auto-generated type stubs** — `client.pyi` is generated on first use and refreshed whenever the spec changes. Works with (based)Pyright, mypy, and Pylance out of the box.
-- **Sensible cache defaults** — spec and stubs are stored in your platform's standard cache directory (`~/.cache/wg/wows`, `%LOCALAPPDATA%/wg/wows`, or `$XDG_CACHE_HOME/wg/wows`) or a custom location.
+- **Sensible cache defaults** — spec and stubs are stored in your platform's standard cache directory (`~/.cache/wg/<title>`, `%LOCALAPPDATA%/wg/<title>`, or `$XDG_CACHE_HOME/wg/<title>`) or a custom location.
 - **Minimal dependencies** — only `aiohttp` required at runtime.
 - **PEP 561 compliant** — ships `py.typed`.
 
@@ -42,15 +42,36 @@ uv add goblin-wg
 ```python
 import asyncio
 import wg.wows as wows
+import wg.wot as wot
 
 
 async def main():
-    client = wows.WargamingAPIClient(application_id="YOUR_WG_APP_ID")
+    wows_client = wows.WargamingAPIClient(application_id="YOUR_WG_APP_ID")
+    wot_client = wot.WargamingAPIClient(application_id="YOUR_WG_APP_ID")
 
-    # All API methods are dynamically bound with full IDE type hints
-    players = await client.account_list(region="na", search="JesusLovesYouExceptSubs")
-    info = await client.account_info(region="na", account_id=123456789)
-    clan = await client.clans_info(region="na", clan_id=674206767, extra="members")
+    # 1. Searching for an account (returns a list of AttrDicts)
+    players = await wows_client.wows_account_list(region="na", search="JesusLovesYouExceptSubs")
+    if not players:
+        return
+
+    account_id = players[0].account_id
+    print(f"Found account ID: {account_id}")
+
+    # 2. Fetching detailed stats (returns a dict keyed by the stringified ID)
+    info_dict = await wows_client.wows_account_info(region="na", account_id=account_id)
+    player_info = info_dict[str(account_id)]
+
+    # 3. Accessing nested AttrDict data natively (using .pvp for Randoms stats)
+    if hasattr(player_info.statistics, "pvp") and player_info.statistics.pvp:
+        pvp_battles = player_info.statistics.pvp.get("battles", 0)
+        pvp_wins = player_info.statistics.pvp.get("wins", 0)
+        winrate = (pvp_wins / pvp_battles * 100) if pvp_battles > 0 else 0
+        print(
+            f"{player_info.nickname} has a {winrate:.2f}% PvP Winrate over {pvp_battles} battles!"
+        )
+
+    # WoT clients function identically with their respective dynamic methods
+    tanks_players = await wot_client.wot_account_list(region="na", search="TankGamer1")
 
 
 asyncio.run(main())
@@ -70,7 +91,7 @@ client = wows.WargamingAPIClient(
 All API responses are returned as `AttrDict` — a `dict` subclass with dot-access for convenience:
 
 ```python
-players = await client.account_list(region="na", search="goblin")
+players = await wows_client.wows_account_list(region="na", search="goblin")
 for p in players:
     print(p.nickname, p.account_id)  # dot access works
 ```
@@ -118,18 +139,15 @@ The `wg` CLI is registered as a project script when installed:
 ```bash
 # Show status of cached spec and stubs
 wg wows info
+wg wot info
 
 # Generate or regenerate type stubs
 wg wows generate-stubs
 wg wows generate-stubs --force   # force even if stubs already exist
 
 # Fetch the latest Wargaming API spec (and optionally regenerate stubs)
-wg wows fetch-spec
-wg wows fetch-spec --generate-stubs
-
-# Shortcut: standalone stub generation (useful in CI or post-install hooks)
-wg-stubgen --force
-wg-stubgen --output /path/to/custom.pyi
+wg wot fetch-spec
+wg wot fetch-spec --generate-stubs
 ```
 
 ### Auto-setup on first run
@@ -163,14 +181,14 @@ print(wg.wows.__version__)  # e.g. "15.8.0" — WoWS game version at spec build 
 
 ## Regional Base URLs
 
-All WoWS API endpoints use the pattern `{base_url}/wows/{method}/`.
+All API endpoints use the pattern `{base_url}/{title}/{method}/` (e.g. `wows` or `wot`).
 
-| Region | Base URL | Code |
-|--------|----------|------|
-| North America | `https://api.worldofwarships.com` | `"na"` |
-| Europe | `https://api.worldofwarships.eu` | `"eu"` |
-| Asia | `https://api.worldofwarships.asia` | `"asia"` |
-| Russia (👀) | `https://api.worldofwarships.ru` | `"ru"` |
+| Region | WoWS Base URL | WoT Base URL | Code |
+|--------|---------------|--------------|------|
+| North America | `https://api.worldofwarships.com` | `https://api.worldoftanks.com` | `"na"` |
+| Europe | `https://api.worldofwarships.eu` | `https://api.worldoftanks.eu` | `"eu"` |
+| Asia | `https://api.worldofwarships.asia` | `https://api.worldoftanks.asia` | `"asia"` |
+| Russia (👀) | `https://api.worldofwarships.ru` | `https://api.worldoftanks.ru` | `"ru"` |
 
 Every request requires a `application_id`. Private endpoints additionally require an `access_token`.
 

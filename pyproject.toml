@@ -1,6 +1,6 @@
 [project]
 name = "goblin-wg"
-version = "1.0.1"
+version = "1.0.2"
 description = "Wargaming API client and CLI toolkit for Python. Dynamically generates typed methods from the live API spec with auto-generated IDE stubs."
 readme = "README.md"
 license = { text = "MIT" }
@@ -44,3 +44,11 @@ path = "hatch_build.py"
 
 [tool.hatch.build.targets.sdist.hooks.custom]
 path = "hatch_build.py"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.40.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.9",
+]

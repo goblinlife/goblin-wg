@@ -28,7 +28,7 @@ class CustomBuildHook(BuildHookInterface):
             sys.path.insert(0, str(src_path))
 
         try:
-            from wg.core.stubgen import generate_type_stubs
+            from wg.core._stubgen import generate_type_stubs
 
             wows_stub = Path(self.root) / "src" / "wg" / "wows" / "client.pyi"
             generate_type_stubs(

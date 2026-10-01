@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 
-from .core.stubgen import (
+from .core._stubgen import (
     ensure_type_stubs,
     fetch_remote_spec,
     generate_type_stubs,

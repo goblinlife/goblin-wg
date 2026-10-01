@@ -23,6 +23,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies and run tests
+        env:
+          WG_APP_ID: ${{ secrets.WG_APP_ID }}
         run: |
           uv sync --all-groups
           uv run pytest

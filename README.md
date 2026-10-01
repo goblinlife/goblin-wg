@@ -6,8 +6,13 @@ Dynamically generates typed methods from the live WG API specification at runtim
 
 Exposes multiple interfaces for the WG developer API as seen here: [Official WarGaming API Reference](https://developers.wargaming.net/reference/)
 
-[![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<p align="center">
+  <a href="https://pypi.org/project/goblin-wg/"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/goblin-wg.svg?style=for-the-badge&logo=pypi&logoColor=white"></a>
+  <a href="https://pypi.org/project/goblin-wg/"><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/goblin-wg.svg?style=for-the-badge&color=blue"></a>
+  <a href="https://python.org"><img alt="Python Versions" src="https://img.shields.io/pypi/pyversions/goblin-wg.svg?style=for-the-badge&logo=python&logoColor=white"></a>
+  <a href="https://github.com/goblinlife/goblin-wg/actions/workflows/publish.yml"><img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/goblinlife/goblin-wg/publish.yml?style=for-the-badge&logo=github"></a>
+  <a href="https://github.com/goblinlife/goblin-wg/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/goblinlife/goblin-wg.svg?style=for-the-badge"></a>
+</p>
 
 ---
 
